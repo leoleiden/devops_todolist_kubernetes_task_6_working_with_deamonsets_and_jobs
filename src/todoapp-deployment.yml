@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todoapp-deployment
+  namespace: mateapp
+  labels:
+    app: todoapp
+spec:
+  replicas: 1 # Можете змінити кількість реплік за потребою
+  selector:
+    matchLabels:
+      app: todoapp
+  template:
+    metadata:
+      labels:
+        app: todoapp
+    spec:
+      containers:
+      - name: todoapp-container
+        image: leoleiden/todoapp:latest # Використовуйте ваш образ!
+        ports:
+        - containerPort: 8080 # Порт, на якому Django-додаток слухає (з Dockerfile)
+        env:
+        - name: DATABASE_URL # Приклад змінної для бази даних, якщо ви її використовуватимете
+          value: "sqlite:///db.sqlite3" # Для продакшену зазвичай використовують зовнішню БД
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe: # Перевірка живості
+          httpGet:
+            path: /api/health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe: # Перевірка готовності
+          httpGet:
+            path: /api/ready
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 10
+      # Залежно від вашої бази даних, тут можуть знадобитися PersistentVolumeClaims
+      # Якщо використовуєте SQLite всередині контейнера, дані будуть втрачені при перезапуску поду.

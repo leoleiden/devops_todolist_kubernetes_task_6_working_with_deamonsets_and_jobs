@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: todoapp-daemonset
+  namespace: mateapp
+spec:
+  selector:
+    matchLabels:
+      app: todoapp-daemon
+  template:
+    metadata:
+      labels:
+        app: todoapp-daemon
+    spec:
+      containers:
+      - name: busyboxplus-curl
+        image: radial/busyboxplus:curl
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        command: ["/bin/sh", "-c"]
+        args:
+          - while true; do
+              curl -s http://todoapp-service:8080/api/health  || echo "Curl failed";
+              sleep 5;
+            done;
+      restartPolicy: Always
